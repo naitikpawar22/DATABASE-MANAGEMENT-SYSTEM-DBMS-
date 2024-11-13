@@ -1,0 +1,52 @@
+CREATE DATABASE IF NOT EXISTS school;
+USE school;
+
+CREATE TABLE student (
+    id VARCHAR(5) NOT NULL,
+    m1 INT NOT NULL,
+    m2 INT NOT NULL,
+    m3 INT NOT NULL,
+    PRIMARY KEY(id)
+);
+
+INSERT INTO student (id, m1, m2, m3) VALUES ('1', 40, 40, 40);
+INSERT INTO student (id, m1, m2, m3) VALUES ('2', 50, 40, 40);
+INSERT INTO student (id, m1, m2, m3) VALUES ('3', 50, 70, 70);
+
+DELIMITER ##
+
+CREATE PROCEDURE grade()
+BEGIN
+    DECLARE pid VARCHAR(5);
+    DECLARE pm1, pm2, pm3, pm INT;
+    DECLARE done INT DEFAULT FALSE;
+
+    DECLARE student_cursor CURSOR FOR SELECT id, m1, m2, m3 FROM student;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN student_cursor;
+
+    cursor_student: LOOP
+        FETCH student_cursor INTO pid, pm1, pm2, pm3;
+        IF done THEN
+            LEAVE cursor_student;
+        END IF;
+
+        SET pm = (pm1 + pm2 + pm3) / 3;
+
+        IF pm >= 70 THEN
+            SELECT CONCAT('Distinction: ', pm) AS result;
+        ELSEIF pm >= 60 THEN
+            SELECT CONCAT('First Class: ', pm) AS result;
+        ELSE
+            SELECT CONCAT('No Distinction or First Class: ', pm) AS result;
+        END IF;
+    END LOOP cursor_student;
+
+    CLOSE student_cursor;
+END
+##
+
+DELIMITER ;
+
+CALL grade();
